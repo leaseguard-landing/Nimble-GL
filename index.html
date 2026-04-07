@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nimble GL</title>
+    <style>
+      :root {
+        --bg: #081b4b;
+        --card: rgba(255, 255, 255, 0.08);
+        --text: #f8fafc;
+        --muted: #cbd5e1;
+        --line: rgba(255, 255, 255, 0.12);
+        --gold: #f4c21c;
+        --gold-soft: rgba(244, 194, 28, 0.18);
+        --shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+        --radius-xl: 28px;
+        --radius-lg: 20px;
+        --max: 1240px;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; min-height: 100%; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(244, 194, 28, 0.12), transparent 26%),
+          radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.06), transparent 24%),
+          linear-gradient(180deg, #091836 0%, var(--bg) 44%, #06153b 100%);
+        background-attachment: fixed;
+      }
+
+      a { color: inherit; text-decoration: none; }
+      img { display: block; max-width: 100%; }
+      .shell { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: blur(16px);
+        background: rgba(7, 20, 51, 0.95);
+        border-bottom: 1px solid var(--line);
+      }
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 16px 0;
+      }
+      .topbar-left,
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        min-width: 0;
+      }
+      .topbar-left .brand img {
+        width: 100%;
+        max-width: 170px;
+        height: auto;
+        object-fit: contain;
+      }
+      .brand-group {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        min-width: 0;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+      }
+      .brand.brand-nimble img {
+        width: 100%;
+        max-width: 180px;
+        height: auto;
+        object-fit: contain;
+      }
+      .brand-divider {
+        width: 1px;
+        height: 34px;
+        background: rgba(255,255,255,0.14);
+        flex: 0 0 auto;
+      }
+      .brand.brand-accelerant img {
+        width: 100%;
+        max-width: 210px;
+        height: auto;
+        object-fit: contain;
+      }
+
+      .mobile-top-nav { display: none; }
+
+      .intro-wrap { padding-top: 28px; }
+      .intro-card,
+      .card,
+      .summary-card,
+      .highlight-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: var(--card);
+        box-shadow: var(--shadow);
+      }
+      .intro-card {
+        padding: 24px;
+        background: linear-gradient(180deg, rgba(244,194,28,0.16), rgba(255,255,255,0.04));
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: #fde68a;
+        background: var(--gold-soft);
+        border: 1px solid rgba(244, 194, 28, 0.26);
+        border-radius: 999px;
+        padding: 10px 14px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(30px, 4.8vw, 46px);
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+      }
+      .lede {
+        margin-top: 12px;
+        font-size: 16px;
+        line-height: 1.8;
+        color: var(--muted);
+        max-width: 860px;
+      }
+      .intro-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 20px;
+        margin-top: 18px;
+        align-items: stretch;
+      }
+      .intro-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .intro-logo-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+      }
+      .intro-logo-row img {
+        height: 34px;
+        width: auto;
+        object-fit: contain;
+      }
+      .intro-side-card {
+        display: grid;
+        gap: 16px;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 22px;
+        background: rgba(7, 20, 51, 0.42);
+        padding: 18px;
+      }
+      .mini-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap: 12px;
+      }
+      .mini-metric {
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 18px;
+        background: rgba(255,255,255,0.04);
+        padding: 14px;
+      }
+      .mini-metric-label {
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #c7d2fe;
+      }
+      .mini-metric-value {
+        margin-top: 8px;
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .mini-metric-note {
+        margin-top: 6px;
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--muted);
+      }
+      .intro-benefits {
+        display: grid;
+        gap: 12px;
+      }
+      .intro-benefit {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 15px;
+      }
+      .intro-benefit-mark {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(244,194,28,0.14);
+        color: var(--gold);
+        font-size: 13px;
+        font-weight: 700;
+        flex: 0 0 auto;
+        margin-top: 2px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 28px;
+        padding: 18px 0 56px;
+      }
+      .sidebar {
+        position: sticky;
+        top: 92px;
+        align-self: start;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: rgba(255,255,255,0.04);
+        padding: 14px;
+      }
+      .tab-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        border-radius: 16px;
+        padding: 14px 16px;
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+        transition: 180ms ease;
+      }
+      .tab-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+      .tab-btn.active { background: rgba(244,194,28,0.15); color: #fff; }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.28);
+        flex: 0 0 auto;
+      }
+      .tab-btn.active .dot { background: var(--gold); }
+
+      .panel { display: none; }
+      .panel.active { display: block; }
+      .section-head { max-width: 960px; }
+      .section-kicker {
+        font-size: 12px;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: #fde68a;
+      }
+      .section-title {
+        margin: 14px 0 0;
+        font-size: clamp(30px, 4vw, 44px);
+        letter-spacing: -0.03em;
+      }
+      .section-text {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.8;
+      }
+
+      .stack-xxl > * + * { margin-top: 28px; }
+      .stack-xl > * + * { margin-top: 24px; }
+      .stack-lg > * + * { margin-top: 18px; }
+      .stack-md > * + * { margin-top: 14px; }
+
+      .grid-2, .grid-3, .grid-4, .grid-5 { display: grid; gap: 18px; }
+      .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+      .card, .summary-card, .highlight-card { padding: 26px; }
+      .card-title { margin: 0; font-size: 22px; }
+      .subhead {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.35;
+      }
+      .muted { color: var(--muted); line-height: 1.8; }
+
+      .metric-label {
+        font-size: 11px;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: #c7d2fe;
+      }
+      .metric-value {
+        margin-top: 12px;
+        font-size: 34px;
+        font-weight: 700;
+        line-height: 1.15;
+        word-break: break-word;
+      }
+      .metric-note {
+        margin-top: 8px;
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .bullet-list { display: grid; gap: 14px; }
+      .bullet {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        color: var(--muted);
+        line-height: 1.75;
+      }
+      .bullet-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(244,194,28,0.14);
+        color: var(--gold);
+        font-size: 13px;
+        font-weight: 700;
+        flex: 0 0 auto;
+        margin-top: 2px;
+      }
+
+      .section-block {
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.04);
+        padding: 24px;
+      }
+      .section-block-title {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: -0.02em;
+      }
+      .section-block-intro {
+        margin-top: 10px;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+
+      .category-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+      .category-card {
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 18px;
+        background: rgba(4,12,34,0.32);
+        padding: 18px;
+      }
+      .category-card-title {
+        margin: 0;
+        font-size: 17px;
+      }
+      .category-card-text {
+        margin-top: 8px;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 14px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 720px;
+      }
+      th, td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        font-size: 14px;
+        vertical-align: top;
+      }
+      th {
+        color: #fef3c7;
+        background: rgba(255,255,255,0.05);
+        font-weight: 600;
+      }
+      tr:last-child td { border-bottom: 0; }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--muted);
+      }
+
+      .risk-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+      .risk-card {
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,0.04);
+      }
+      .risk-card.good { border-color: rgba(34,197,94,0.35); }
+      .risk-card.moderate { border-color: rgba(245,158,11,0.35); }
+      .risk-card.high { border-color: rgba(248,113,113,0.35); }
+      .risk-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        border: 1px solid rgba(255,255,255,0.12);
+      }
+      .risk-card.good .risk-tag { color: #bbf7d0; background: rgba(34,197,94,0.12); }
+      .risk-card.moderate .risk-tag { color: #fde68a; background: rgba(245,158,11,0.12); }
+      .risk-card.high .risk-tag { color: #fecaca; background: rgba(248,113,113,0.12); }
+      .risk-title {
+        margin: 14px 0 0;
+        font-size: 22px;
+      }
+      .risk-score {
+        margin-top: 8px;
+        color: #c7d2fe;
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .risk-summary {
+        margin-top: 12px;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+
+      .bar-list { display: grid; gap: 14px; }
+      .bar-row-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .bar-track {
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f4c21c, #ffd84d);
+      }
+
+      .split-analytics {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 18px;
+      }
+
+      .highlight-card {
+        background: linear-gradient(180deg, rgba(244,194,28,0.18), rgba(255,255,255,0.04));
+      }
+
+      .foot-space {
+        height: 40px;
+      }
+
+      @media (max-width: 1180px) {
+        .grid-5 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 1080px) {
+        .intro-grid,
+        .grid-5,
+        .grid-4,
+        .grid-3,
+        .grid-2,
+        .risk-grid,
+        .split-analytics,
+        .category-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .shell { width: min(var(--max), calc(100% - 24px)); }
+        .card, .summary-card, .highlight-card, .risk-card, .section-block { padding: 22px; }
+        .layout { grid-template-columns: 1fr; gap: 18px; }
+        .sidebar { display: none; }
+
+        .topbar.mobile-nav-mode .topbar-left,
+        .topbar.mobile-nav-mode .topbar-right { display: none; }
+        .topbar.mobile-nav-mode .topbar-inner { display: block; padding: 10px 0; }
+        .topbar .mobile-top-nav { display: none; }
+        .topbar.mobile-nav-mode .mobile-top-nav {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+        }
+        .topbar.mobile-nav-mode .mobile-top-nav .tab-btn {
+          width: 100%;
+          min-width: 0;
+          justify-content: center;
+          padding: 10px 6px;
+          text-align: center;
+          border-radius: 12px;
+          font-size: 12px;
+          line-height: 1.2;
+          gap: 0;
+          white-space: normal;
+        }
+        .topbar.mobile-nav-mode .mobile-top-nav .dot { display: none; }
+
+        .topbar-left .brand img { max-width: 120px; }
+        .brand.brand-nimble img { max-width: 108px; }
+        .brand.brand-accelerant img { max-width: 128px; }
+        .brand-divider { height: 26px; }
+        h1 { font-size: 36px; }
+
+        .table-wrap.mobile-cards { overflow-x: visible; }
+        .table-wrap.mobile-cards table,
+        .table-wrap.mobile-cards thead,
+        .table-wrap.mobile-cards tbody,
+        .table-wrap.mobile-cards tr,
+        .table-wrap.mobile-cards th,
+        .table-wrap.mobile-cards td {
+          display: block;
+          width: 100%;
+          min-width: 0;
+        }
+        .table-wrap.mobile-cards table { min-width: 0; }
+        .table-wrap.mobile-cards thead {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+          clip-path: inset(50%);
+          white-space: nowrap;
+        }
+        .table-wrap.mobile-cards tbody { display: grid; gap: 12px; padding: 12px; }
+        .table-wrap.mobile-cards tr {
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          background: rgba(255,255,255,0.04);
+          overflow: hidden;
+        }
+        .table-wrap.mobile-cards td {
+          border-bottom: 1px solid var(--line);
+          padding: 10px 12px;
+          text-align: left;
+          font-size: 13px;
+        }
+        .table-wrap.mobile-cards td:last-child { border-bottom: 0; }
+        .table-wrap.mobile-cards td::before {
+          content: attr(data-label);
+          display: block;
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #c7d2fe;
+          margin-bottom: 5px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="shell topbar-inner">
+        <div class="topbar-left">
+          <div class="brand brand-leaseguard">
+            <img src="./leaseguard-logo.png" alt="LeaseGuard" />
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="brand-group">
+            <div class="brand brand-nimble">
+              <img src="./Nimble-Logo.png" alt="Nimble" />
+            </div>
+            <div class="brand-divider"></div>
+            <div class="brand brand-accelerant">
+              <img src="./accelerant-logo.png" alt="Accelerant" />
+            </div>
+          </div>
+        </div>
+
+        <div class="mobile-top-nav" aria-label="Mobile section navigation">
+          <button class="tab-btn active" data-tab="overview" type="button"><span class="dot"></span><span>Overview</span></button>
+          <button class="tab-btn" data-tab="business" type="button"><span class="dot"></span><span>Business Plan</span></button>
+          <button class="tab-btn" data-tab="profile" type="button"><span class="dot"></span><span>Risk Profile</span></button>
+        </div>
+      </div>
+    </header>
+
+    <div class="shell intro-wrap">
+      <div class="intro-card">
+        <div class="eyebrow">Nimble GL</div>
+        <div class="intro-grid">
+          <div class="intro-copy">
+            <div class="intro-logo-row">
+              <img src="./Nimble-Logo.png" alt="Nimble" />
+              <img src="./accelerant-logo.png" alt="Accelerant" />
+            </div>
+            <h1>Commercial General Liability Program for Habitational Risk</h1>
+            <p class="lede">
+              A structured presentation of the business plan, target market, underwriting posture,
+              rating methodology, account profile standards, and current book analytics supporting the
+              Nimble GL program.
+            </p>
+          </div>
+          <div class="intro-side-card">
+            <div class="mini-metrics">
+              <div class="mini-metric">
+                <div class="mini-metric-label">Policy Count</div>
+                <div class="mini-metric-value">440</div>
+                <div class="mini-metric-note">Current policy count represented in the book.</div>
+              </div>
+              <div class="mini-metric">
+                <div class="mini-metric-label">Average Policy Premium</div>
+                <div class="mini-metric-value">$15,521.70</div>
+                <div class="mini-metric-note">Average written premium per policy across the current portfolio.</div>
+              </div>
+              <div class="mini-metric">
+                <div class="mini-metric-label">Current Book GWP</div>
+                <div class="mini-metric-value">$6.83M</div>
+                <div class="mini-metric-note">Current written premium represented in the portfolio snapshot.</div>
+              </div>
+              <div class="mini-metric">
+                <div class="mini-metric-label">Current Unit Count</div>
+                <div class="mini-metric-value">62,246</div>
+                <div class="mini-metric-note">Total multifamily units reflected in the current portfolio.</div>
+              </div>
+              <div class="mini-metric">
+                <div class="mini-metric-label">States Represented</div>
+                <div class="mini-metric-value">30</div>
+                <div class="mini-metric-note">State footprint reflected across the current book.</div>
+              </div>
+            </div>
+            <div class="intro-benefits">
+              <div class="intro-benefit"><span class="intro-benefit-mark">✓</span><span>Executive overview and market opportunity presented in a clean, technical format.</span></div>
+              <div class="intro-benefit"><span class="intro-benefit-mark">✓</span><span>Business plan sections organized to show target market, underwriting guidelines, rating methodology, and pricing philosophy.</span></div>
+              <div class="intro-benefit"><span class="intro-benefit-mark">✓</span><span>Risk characteristics page displaying good, moderate, and high risk examples alongside underwriting red flags.</span></div>
+              <div class="intro-benefit"><span class="intro-benefit-mark">✓</span><span>Portfolio analytics integrated directly into the overview to show current premium, unit concentration, and state distribution.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="shell layout">
+      <aside class="sidebar">
+        <button class="tab-btn active" data-tab="overview" type="button"><span class="dot"></span><span>Overview & Opportunity</span></button>
+        <button class="tab-btn" data-tab="business" type="button"><span class="dot"></span><span>Business Plan</span></button>
+        <button class="tab-btn" data-tab="profile" type="button"><span class="dot"></span><span>Risk Characteristics & Account Profile</span></button>
+      </aside>
+
+      <main>
+        <section id="overview" class="panel active stack-xxl"></section>
+        <section id="business" class="panel stack-xxl"></section>
+        <section id="profile" class="panel stack-xxl"></section>
+      </main>
+    </section>
+
+    <div class="foot-space"></div>
+
+    <script>
+      const analytics = {
+        totals: {
+          policyCount: 440,
+          grossWrittenPremium: 6829546.70,
+          totalUnits: 62246,
+          avgPolicyPremium: 15521.70,
+          statesRepresented: 30
+        },
+        premiumByState: [
+          { state: 'TX', value: 3504415.29, percent: 51.31, units: 38534, unitPercent: 61.91 },
+          { state: 'GA', value: 840751.69, percent: 12.31, units: 4264, unitPercent: 6.85 },
+          { state: 'FL', value: 401075.98, percent: 5.87, units: 2024, unitPercent: 3.25 },
+          { state: 'LA', value: 383048.38, percent: 5.61, units: 1037, unitPercent: 1.67 },
+          { state: 'TN', value: 276261.99, percent: 4.05, units: 4161, unitPercent: 6.68 },
+          { state: 'OK', value: 213998.83, percent: 3.13, units: 1838, unitPercent: 2.95 },
+          { state: 'AL', value: 182933.94, percent: 2.68, units: 1319, unitPercent: 2.12 },
+          { state: 'MS', value: 143085.90, percent: 2.10, units: 875, unitPercent: 1.41 },
+          { state: 'IN', value: 127431.24, percent: 1.87, units: 1108, unitPercent: 1.78 },
+          { state: 'AR', value: 118554.80, percent: 1.74, units: 1510, unitPercent: 2.43 }
+        ]
+      };
+
+      const currency = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0
+      });
+      const currency2 = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      const integer = new Intl.NumberFormat('en-US');
+
+      function sectionHead(kicker, title, text) {
+        return `
+          <div class="section-head">
+            <div class="section-kicker">${kicker}</div>
+            <h2 class="section-title">${title}</h2>
+            <div class="section-text">${text}</div>
+          </div>
+        `;
+      }
+
+      function card(title, body) {
+        return `
+          <div class="card">
+            <h3 class="card-title">${title}</h3>
+            <div class="muted" style="margin-top:12px;">${body}</div>
+          </div>
+        `;
+      }
+
+      function metricCard(label, value, note) {
+        return `
+          <div class="summary-card">
+            <div class="metric-label">${label}</div>
+            <div class="metric-value">${value}</div>
+            <div class="metric-note">${note}</div>
+          </div>
+        `;
+      }
+
+      function bulletList(items) {
+        return `
+          <div class="bullet-list">
+            ${items.map((item) => `
+              <div class="bullet">
+                <span class="bullet-icon">✓</span>
+                <span>${item}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      function barList(items, formatter = (value) => value) {
+        const max = Math.max(...items.map((item) => item.value));
+        return `
+          <div class="bar-list">
+            ${items.map((item) => `
+              <div>
+                <div class="bar-row-top">
+                  <span>${item.label}</span>
+                  <span>${formatter(item.value)}${item.suffix ? ` · ${item.suffix}` : ''}</span>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width:${(item.value / max) * 100}%"></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      function globalMetricsBar() {
+        return `
+          <div class="grid-5">
+            ${metricCard('Policy Count', integer.format(analytics.totals.policyCount), 'Current policy count represented in the portfolio.')}
+            ${metricCard('Average Policy Premium', currency2.format(analytics.totals.avgPolicyPremium), 'Average written premium per policy across the current book.')}
+            ${metricCard('Current Book GWP', currency2.format(analytics.totals.grossWrittenPremium), 'Current gross written premium reflected in the portfolio.')}
+            ${metricCard('Current Unit Count', integer.format(analytics.totals.totalUnits), 'Aggregate units represented across the book.')}
+            ${metricCard('States Represented', integer.format(analytics.totals.statesRepresented), 'State footprint represented in the current portfolio.')}
+          </div>
+        `;
+      }
+
+      function renderOverview() {
+        const premiumBars = analytics.premiumByState.map((row) => ({
+          label: `${row.state}`,
+          value: row.value,
+          suffix: `${row.percent.toFixed(2)}% of GWP`
+        }));
+
+        const el = document.getElementById('overview');
+        el.innerHTML = `
+          ${globalMetricsBar()}
+
+          ${sectionHead(
+            'Executive overview',
+            'Overview & Opportunity',
+            'This program is designed to launch and scale a Commercial General Liability platform focused on underwriting and servicing habitational and select commercial risks. The underlying business plan emphasizes disciplined underwriting, structured risk selection, scalable portfolio growth, and adherence to a clearly defined appetite and exposure framework.'
+          )}
+
+          <div class="grid-4">
+            ${metricCard('Target focus', 'Habitational', 'Primary emphasis on multifamily / habitational properties, small to mid-size apartment portfolios, and select mixed-use risks with residential components.')}
+            ${metricCard('Standard limits', '$1M / $2M', 'Core coverage structure contemplates standard Commercial General Liability limits with endorsement flexibility where underwriting conditions warrant.')}
+            ${metricCard('Risk model', '1–10', 'Each risk is evaluated across five key categories and translated into an average risk score used to support underwriting and pricing decisions.')}
+            ${metricCard('Current book', currency2.format(analytics.totals.grossWrittenPremium), 'Current book premium supporting the portfolio baseline and opportunity discussion.')}
+          </div>
+
+          <div class="grid-2">
+            ${card(
+              'Executive overview',
+              `
+                <div class="stack-lg">
+                  <div>The program objective is to build a profitable and sustainable book of Commercial General Liability business by targeting well-managed risks, leveraging data-driven underwriting practices, and maintaining strict adherence to defined risk appetite and exposure controls.</div>
+                  <div>Rather than relying on broad-market generalizations, the business plan is built around measurable characteristics: occupancy, management quality, property condition, loss history, life safety, security, habitability exposure, and jurisdictional considerations.</div>
+                  <div>This approach supports consistency in risk selection, transparency in rating, and long-term portfolio stability as business transitions into the product at renewal.</div>
+                </div>
+              `
+            )}
+            <div class="highlight-card">
+              <h3 class="card-title">Market opportunity</h3>
+              <div style="margin-top:14px;">
+                ${bulletList([
+                  'The CGL marketplace, particularly within habitational, is experiencing dislocation driven by increasing claim severity, including habitability and assault and battery exposure.',
+                  'Carrier retrenchment and reduced capacity continue to create gaps for insureds that still meet defined quality thresholds.',
+                  'Heightened underwriting scrutiny across multifamily has increased the value of a clearly articulated appetite, structured scoring, and consistent execution.',
+                  'Rising premium levels and constrained market options create a favorable environment for a disciplined program able to differentiate through selection, controls, and underwriting quality.'
+                ])}
+              </div>
+            </div>
+          </div>
+
+          <div class="split-analytics">
+            <div class="card">
+              <h3 class="card-title">Current premium by state</h3>
+              <div class="muted" style="margin-top:10px;">Top states ranked by current gross written premium.</div>
+              <div style="margin-top:18px;">
+                ${barList(premiumBars, (value) => currency.format(value))}
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="card-title">State concentration observations</h3>
+              <div style="margin-top:14px;">
+                ${bulletList([
+                  'Texas is the dominant state in the current book, representing just over half of total gross written premium and nearly two-thirds of total units.',
+                  'Georgia is the second-largest premium state and contributes a meaningful share of the book despite a much smaller unit base than Texas.',
+                  'Florida and Louisiana each contribute meaningful premium volume relative to their smaller unit counts, showing sharper premium concentration.',
+                  'The current state mix provides both scale and geographic spread, while still showing clear concentration in a handful of lead markets.'
+                ])}
+              </div>
+            </div>
+          </div>
+
+          <div class="section-block stack-xl">
+            <div>
+              <h3 class="section-block-title">Current premium by state detail</h3>
+              <div class="section-block-intro">
+                Combined view of current written premium, policy concentration, and unit concentration across the leading states in the book.
+              </div>
+            </div>
+
+            <div class="table-wrap mobile-cards">
+              <table>
+                <thead>
+                  <tr>
+                    <th>State</th>
+                    <th>Written Premium</th>
+                    <th>% of GWP</th>
+                    <th>Unit Count</th>
+                    <th>% of Units</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${analytics.premiumByState.map((row) => `
+                    <tr>
+                      <td data-label="State">${row.state}</td>
+                      <td data-label="Written Premium">${currency2.format(row.value)}</td>
+                      <td data-label="% of GWP">${row.percent.toFixed(2)}%</td>
+                      <td data-label="Unit Count">${integer.format(row.units)}</td>
+                      <td data-label="% of Units">${row.unitPercent.toFixed(2)}%</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-block">
+            <h3 class="section-block-title">Target market and risk appetite at a glance</h3>
+            <div class="section-block-intro">
+              The core target consists of multifamily / habitational properties, small to mid-size apartment portfolios, and select mixed-use properties with residential components. Preferred submissions show occupancy above 85%, documented capital improvements, professional third-party management, strong tenant screening, favorable loss history, and locations in moderate to low crime areas.
+            </div>
+            <div class="category-grid">
+              <div class="category-card">
+                <h4 class="category-card-title">Preferred characteristics</h4>
+                <div class="category-card-text">High occupancy, management discipline, favorable loss history, and maintenance investment drive the strongest fit.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">Acceptable with controls</h4>
+                <div class="category-card-text">Older properties, moderate crime locations, or prior losses may still fit when renovations, mitigation, and corrective actions are clearly documented.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">Outside appetite</h4>
+                <div class="category-card-text">High vacancy, deferred maintenance, repeated habitability or A&amp;B claims, weak management, and high-crime exposures without mitigation remain outside the preferred framework.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">Program objective</h4>
+                <div class="category-card-text">Favorable loss ratios, durable broker relationships, and long-term portfolio stability through disciplined selection instead of undifferentiated growth.</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderBusinessPlan() {
+        const el = document.getElementById('business');
+        el.innerHTML = `
+          ${globalMetricsBar()}
+
+          ${sectionHead(
+            'Business plan',
+            'Business Plan',
+            'This page organizes the business plan into its core program components: target market, underwriting guidelines, coverage structure, rating methodology, pricing philosophy, competitive advantage, and conclusion.'
+          )}
+
+          <div class="section-block stack-xl">
+            <div>
+              <h3 class="section-block-title">Target market & risk appetite</h3>
+              <div class="section-block-intro">
+                Primary focus includes multifamily / habitational properties, small to mid-size apartment portfolios, and select mixed-use properties with residential components. Preferred risks show occupancy levels above 85%, documented updates to major systems, professional third-party management, strong screening practices, favorable loss history, and locations in moderate to low crime areas.
+              </div>
+            </div>
+
+            <div class="grid-3">
+              ${card(
+                'Preferred business',
+                bulletList([
+                  'Occupancy above 85%',
+                  'Demonstrated capital improvements to roof, plumbing, electrical, or HVAC',
+                  'Professional third-party property management',
+                  'Strong tenant screening practices',
+                  'Low frequency and severity loss history',
+                  'Moderate to low crime area profile'
+                ])
+              )}
+              ${card(
+                'Acceptable with controls',
+                bulletList([
+                  'Older properties with documented renovations',
+                  'Moderate crime score locations with enhanced security measures',
+                  'Prior losses where clear corrective actions have been implemented'
+                ])
+              )}
+              ${card(
+                'Risks outside appetite',
+                bulletList([
+                  'High vacancy or transient occupancy',
+                  'Deferred maintenance or poor condition',
+                  'Repeated habitability or assault and battery claims',
+                  'Lack of professional management',
+                  'High-crime locations without adequate mitigation'
+                ])
+              )}
+            </div>
+          </div>
+
+          <div class="section-block stack-xl">
+            <div>
+              <h3 class="section-block-title">Underwriting guidelines</h3>
+              <div class="section-block-intro">
+                The underwriting framework is built around thirteen structured review areas to evaluate each property’s operating quality, risk controls, and expected loss behavior.
+              </div>
+            </div>
+
+            <div class="category-grid">
+              <div class="category-card">
+                <h4 class="category-card-title">4.1 Risk profile & occupancy</h4>
+                <div class="category-card-text">Evaluate property type, occupancy levels, tenant profile, vacancy rates, and transient usage patterns.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.2 Location & crime exposure</h4>
+                <div class="category-card-text">Assess crime scores and local incident history and apply heightened scrutiny where jurisdictions show elevated exposure.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.3 Property condition & capital improvements</h4>
+                <div class="category-card-text">Review year built, renovation history, major system updates, and any signs of deferred maintenance.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.4 Life safety systems</h4>
+                <div class="category-card-text">Require smoke and carbon monoxide detectors, extinguishers, inspection schedules, safe walkways, adequate lighting, and prefer sprinklered properties.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.5 Security & assault and battery exposure</h4>
+                <div class="category-card-text">Evaluate access controls, camera coverage, lighting, and security personnel to understand severity drivers.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.6 Management quality</h4>
+                <div class="category-card-text">Prioritize professionally managed risks and review maintenance responsiveness, screening protocols, and lease enforcement.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.7 Loss history</h4>
+                <div class="category-card-text">Analyze three to five years of loss runs, frequency and severity trends, and investigate large or recurring claims.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.8 Habitability exposure</h4>
+                <div class="category-card-text">Assess mold, infestations, utilities, and unsafe living condition exposure and apply sublimits or exclusions where appropriate.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.9 Construction type</h4>
+                <div class="category-card-text">Classify frame, masonry, or fire-resistive construction and adjust underwriting posture based on risk class.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.10 Amenities & liability drivers</h4>
+                <div class="category-card-text">Evaluate pools, playgrounds, fitness centers, and pet areas for maintenance quality and safety controls.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.11 Coverage structure</h4>
+                <div class="category-card-text">Standard limits are $1M / $2M, with endorsement application as needed for assault and battery, habitability, mold, and abuse / molestation.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.12 Territory considerations</h4>
+                <div class="category-card-text">Account for jurisdictional litigation trends and apply conservative underwriting in higher-risk states.</div>
+              </div>
+              <div class="category-card">
+                <h4 class="category-card-title">4.13 Declination criteria</h4>
+                <div class="category-card-text">Adverse loss history, high crime without mitigation, deferred maintenance, or lack of management oversight can drive declination.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-block stack-xl">
+            <div>
+              <h3 class="section-block-title">Rating methodology & exposure model</h3>
+              <div class="section-block-intro">
+                The program uses a simplified exposure-based rating matrix designed to support consistent and transparent pricing. Each risk is evaluated across five categories and assigned a score from 1 to 10, then converted into an average risk score.
+              </div>
+            </div>
+
+            <div class="grid-2">
+              ${card(
+                'Risk scoring framework',
+                `
+                  <div class="stack-md">
+                    <div><strong>Categories:</strong> Property Condition, Location & Crime, Management Quality, Loss History, Security & Safety.</div>
+                    <div><strong>Total score range:</strong> 5 to 50.</div>
+                    <div><strong>Average risk score:</strong> Total Score / 5, producing a 1 to 10 average risk score used to support underwriting and pricing adjustments.</div>
+                    <div><strong>Illustrative examples:</strong> Total 15 = Average 3 (good risk), Total 30 = Average 6 (moderate risk), Total 45 = Average 9 (high risk).</div>
+                  </div>
+                `
+              )}
+
+              <div class="card">
+                <h3 class="card-title">Risk percentage factor</h3>
+                <div class="table-wrap mobile-cards" style="margin-top:16px;">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Risk Score</th>
+                        <th>Risk Level</th>
+                        <th>Premium Factor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-label="Risk Score">1-2</td>
+                        <td data-label="Risk Level">Excellent</td>
+                        <td data-label="Premium Factor">70% - 80%</td>
+                      </tr>
+                      <tr>
+                        <td data-label="Risk Score">3-4</td>
+                        <td data-label="Risk Level">Good</td>
+                        <td data-label="Premium Factor">85% - 95%</td>
+                      </tr>
+                      <tr>
+                        <td data-label="Risk Score">5-6</td>
+                        <td data-label="Risk Level">Standard</td>
+                        <td data-label="Premium Factor">100% - 115%</td>
+                      </tr>
+                      <tr>
+                        <td data-label="Risk Score">7-8</td>
+                        <td data-label="Risk Level">Elevated</td>
+                        <td data-label="Premium Factor">120% - 140%</td>
+                      </tr>
+                      <tr>
+                        <td data-label="Risk Score">9-10</td>
+                        <td data-label="Risk Level">High Risk</td>
+                        <td data-label="Premium Factor">150% - 200%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-3">
+              ${card(
+                'Base premium inputs',
+                `
+                  <div class="stack-md">
+                    <div>Premium is calculated using an exposure base such as units, square footage, or revenue.</div>
+                    <div>A class rate is then applied and adjusted by the appropriate risk factor.</div>
+                    <div><strong>Formula:</strong> Premium = Exposure Base × Class Rate × Risk Factor.</div>
+                  </div>
+                `
+              )}
+              ${card(
+                'Pricing philosophy',
+                bulletList([
+                  'Reward well-managed, lower-risk assets with competitive pricing',
+                  'Apply rate adequacy to higher-risk exposures',
+                  'Maintain underwriting discipline over growth to protect profitability'
+                ])
+              )}
+              ${card(
+                'Competitive advantage',
+                bulletList([
+                  'Structured underwriting discipline',
+                  'Clear and consistent risk selection criteria',
+                  'Transparent and scalable rating methodology',
+                  'Focus on operational quality, not just pricing',
+                  'Alignment with carrier expectations, improved loss performance, and stronger broker relationships'
+                ])
+              )}
+            </div>
+          </div>
+
+          <div class="highlight-card">
+            <h3 class="card-title">Conclusion</h3>
+            <div class="muted" style="margin-top:14px;">
+              The business plan positions the Nimble GL program to capitalize on a dislocated market environment by combining disciplined underwriting, defined risk appetite, and a scalable pricing model. By focusing on quality risks, operational excellence, and consistent execution, the program is designed to pursue sustainable premium growth, strong underwriting profitability, and long-term market relevance.
+            </div>
+          </div>
+        `;
+      }
+
+      function renderProfile() {
+        const el = document.getElementById('profile');
+        el.innerHTML = `
+          ${globalMetricsBar()}
+
+          ${sectionHead(
+            'Risk characteristics',
+            'Risk Characteristics & Account Profile',
+            'This page translates the underwriting framework into tangible account profiles. The objective is to show what good, moderate, and high risk habitational submissions look like in practice and to make the underwriting posture visible at the property level.'
+          )}
+
+          <div class="risk-grid">
+            <div class="risk-card good">
+              <div class="risk-tag">Target / preferred</div>
+              <h3 class="risk-title">Good Risk</h3>
+              <div class="risk-score">Expected Score: 2–3 · Excellent / Good</div>
+              <div class="risk-summary">
+                Strong management, updated asset, low loss activity, and favorable location characteristics. A stabilized multifamily asset with strong controls that fits squarely within preferred underwriting appetite.
+              </div>
+              <div class="pill-row" style="margin-top:18px;">
+                <span class="pill">96% occupancy</span>
+                <span class="pill">220 units</span>
+                <span class="pill">Built 2008</span>
+                <span class="pill">Dallas, TX</span>
+              </div>
+            </div>
+
+            <div class="risk-card moderate">
+              <div class="risk-tag">Acceptable with controls</div>
+              <h3 class="risk-title">Moderate Risk</h3>
+              <div class="risk-score">Expected Score: 5–6 · Standard</div>
+              <div class="risk-summary">
+                Older asset in a moderate crime area with some loss activity, but ownership has made meaningful improvements and implemented controls. Acceptable with pricing discipline and possible A&amp;B / habitability limitations.
+              </div>
+              <div class="pill-row" style="margin-top:18px;">
+                <span class="pill">90% occupancy</span>
+                <span class="pill">300 units</span>
+                <span class="pill">Built 1985</span>
+                <span class="pill">Houston, TX</span>
+              </div>
+            </div>
+
+            <div class="risk-card high">
+              <div class="risk-tag">Borderline / declination territory</div>
+              <h3 class="risk-title">High Risk</h3>
+              <div class="risk-score">Expected Score: 8–10 · Elevated / High Risk</div>
+              <div class="risk-summary">
+                Significant red flags across underwriting categories, including deferred maintenance, high crime, poor controls, weak management, and adverse loss history. Likely outside appetite or requires heavy restrictions, high pricing, or declination.
+              </div>
+              <div class="pill-row" style="margin-top:18px;">
+                <span class="pill">78% occupancy</span>
+                <span class="pill">340 units</span>
+                <span class="pill">Built 1972</span>
+                <span class="pill">High-crime urban area</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-block stack-xl">
+            <div>
+              <h3 class="section-block-title">Detailed account profile examples</h3>
+              <div class="section-block-intro">
+                The examples below are designed to show how property-level facts map into the underwriting framework and ultimately into risk scoring and pricing posture.
+              </div>
+            </div>
+
+            <div class="grid-3">
+              ${card(
+                'Good risk profile',
+                `
+                  <div class="stack-md">
+                    <div><strong>Named insured:</strong> Greenfield Residential LLC</div>
+                    <div><strong>Ownership / experience:</strong> LLC single asset entity, 12 years in business, professionally managed.</div>
+                    <div><strong>Property schedule:</strong> Greenfield Apartments, suburban Dallas, TX, 12 buildings, 220 units, 210,000 square feet, 96% occupancy.</div>
+                    <div><strong>Renovations:</strong> Roof 2021, plumbing 2019, HVAC 2020, interior upgrades 2022.</div>
+                    <div><strong>Life safety:</strong> Smoke detectors, CO detectors, annual extinguisher inspections, 100% sprinklered, full LED site lighting.</div>
+                    <div><strong>Security:</strong> Gated access, full perimeter and common-area cameras, controlled access buildings.</div>
+                    <div><strong>Management quality:</strong> National third-party operator, 20+ years experience, 24-hour maintenance SLA, full screening including credit, background, and income verification.</div>
+                    <div><strong>Loss history:</strong> Minimal losses, no large losses, no habitability or assault and battery claims.</div>
+                  </div>
+                `
+              )}
+
+              ${card(
+                'Moderate risk profile',
+                `
+                  <div class="stack-md">
+                    <div><strong>Named insured:</strong> Oakridge Holdings LP</div>
+                    <div><strong>Ownership / experience:</strong> LP, 8 years in business, regional operator.</div>
+                    <div><strong>Property schedule:</strong> Oakridge Villas, Houston, TX, 18 buildings, 300 units, 275,000 square feet, 90% occupancy.</div>
+                    <div><strong>Renovations:</strong> Roof 2018, partial plumbing upgrades 2017–2021, partial electrical upgrades, mixed HVAC age, exterior improvements in 2022.</div>
+                    <div><strong>Life safety:</strong> Smoke detectors, CO detectors, extinguishers, 25% sprinkler coverage, improved but incomplete lighting upgrades.</div>
+                    <div><strong>Security:</strong> No gated access, limited cameras, third-party night patrol, added lighting after incidents.</div>
+                    <div><strong>Management quality:</strong> Regional operator, 10 years experience, reactive but improving maintenance, standard screening.</div>
+                    <div><strong>Loss history:</strong> Moderate frequency, one prior slip and fall large loss, minor habitability complaints resolved.</div>
+                  </div>
+                `
+              )}
+
+              ${card(
+                'High risk profile',
+                `
+                  <div class="stack-md">
+                    <div><strong>Named insured:</strong> Sunset Affordable Housing Inc.</div>
+                    <div><strong>Ownership / experience:</strong> Non-institutional owner, 3 years in business, self-managed.</div>
+                    <div><strong>Property schedule:</strong> Sunset Terrace, high-crime urban area, 22 buildings, 340 units, 300,000 square feet, 78% occupancy.</div>
+                    <div><strong>Renovations:</strong> Roof unknown / partial repairs, original plumbing, outdated electrical, aging HVAC, minimal capex investment.</div>
+                    <div><strong>Life safety:</strong> Inconsistent smoke detectors, no CO detectors, limited extinguisher compliance, no sprinklers, poor lighting.</div>
+                    <div><strong>Security:</strong> No gated access, no cameras, no security personnel, no formal controls.</div>
+                    <div><strong>Management quality:</strong> Limited experience, delayed maintenance, minimal tenant screening.</div>
+                    <div><strong>Loss history:</strong> Frequent claims, multiple large losses, prior A&amp;B incidents, ongoing habitability complaints.</div>
+                  </div>
+                `
+              )}
+            </div>
+          </div>
+
+          <div class="grid-2">
+            ${card(
+              'Major underwriting red flags',
+              `
+                <div class="pill-row">
+                  <span class="pill">Stab Lok</span>
+                  <span class="pill">Pure Aluminum</span>
+                  <span class="pill">True Student Housing</span>
+                </div>
+                <div class="muted" style="margin-top:16px;">
+                  These red flags warrant heightened scrutiny and can quickly move a submission outside the preferred appetite depending on surrounding conditions, mitigation, and overall file strength.
+                </div>
+              `
+            )}
+
+            ${card(
+              'How the account profile page should be used',
+              `
+                <div class="stack-md">
+                  <div>The good / moderate / high profile framework gives underwriters, producers, and stakeholders a common language for screening submissions before a full pricing exercise.</div>
+                  <div>It also supports alignment around where pricing discipline, restrictions, or declination may be warranted and provides a practical bridge between the written business plan and actual submission triage.</div>
+                </div>
+              `
+            )}
+          </div>
+        `;
+      }
+
+      function initTabs() {
+        const buttons = Array.from(document.querySelectorAll('.tab-btn'));
+        const panels = Array.from(document.querySelectorAll('.panel'));
+        const main = document.querySelector('main');
+        const topbar = document.querySelector('.topbar');
+
+        function activate(tab) {
+          buttons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === tab));
+          panels.forEach((panel) => panel.classList.toggle('active', panel.id === tab));
+          if (main) {
+            const offset = window.innerWidth <= 640 ? 96 : 88;
+            const top = main.getBoundingClientRect().top + window.scrollY - offset;
+            window.scrollTo({ top, behavior: 'smooth' });
+          }
+        }
+
+        function syncMobileHeader() {
+          if (!topbar) return;
+          if (window.innerWidth > 640) {
+            topbar.classList.remove('mobile-nav-mode');
+            return;
+          }
+          if (window.scrollY > 110) topbar.classList.add('mobile-nav-mode');
+          else topbar.classList.remove('mobile-nav-mode');
+        }
+
+        buttons.forEach((btn) => btn.addEventListener('click', () => activate(btn.dataset.tab)));
+        window.addEventListener('scroll', syncMobileHeader, { passive: true });
+        window.addEventListener('resize', syncMobileHeader);
+        syncMobileHeader();
+      }
+
+      function init() {
+        renderOverview();
+        renderBusinessPlan();
+        renderProfile();
+        initTabs();
+      }
+
+      init();
+    </script>
+  </body>
+</html>
